@@ -63,27 +63,35 @@ names_all=names_forward+names_backward
 class ExpandedBoard:
   """An uncompressed board
   
-  Attributes:
+  Instance Attributes:
   
     - pegs = list of boolean values for each peg: True for filled space, False for empty
-    - history = list of indices in the complete moves and transformations to generate this board"""
+    - history = list of indices in the complete moves and transformations to generate this board
+  
+  Class Attributes:
+  
+    - jumps = table of moves as list of tuples, each tuple a triple of peg indices: (start, middle, end)
+        The list includes moves in both the forward and backward directions.
+    - numjumps = len(jumps)"""
+  jumps=moves_all
+  numjumps=len(jumps)
   def __init__(self,pegs,history):
     self.pegs=pegs
     self.history=history
-  def move_applies(self,move):
+  def move_applies(self,jindex):
     """True if the given move applies to the board
 
     Arguments:
 
-      - move = tuple of move indices (start, middle, end), as from table moves_all"""
-    st,md,en=move
+      - jindex = integer index of entry in class attribute ``jumps``"""
+    st,md,en=self.jumps[jindex]
     return self.pegs[st] and self.pegs[md] and not self.pegs[en]
-  def apply_move(self,move):
+  def apply_move(self,jindex):
     """Create the child indicated.
     
     Arguments:
     
-      - move = tuple of move indices (start, middle, end), as from table moves_all
+      - jindex = integer index of entry in class attribute ``jumps``
     
     Returns:
     
@@ -91,7 +99,8 @@ class ExpandedBoard:
     
     This function does not check that the move is valid.
     See `move_applies` for that."""
-    ##TODO: this doesn't set the history for the board! Argument should be jindex rather than move (get move from lookup)
+    move=self.jumps[jindex]
+    ##TODO: this doesn't set the history for the board!
     return ExpandedBoard([p if not i in move else not p for i,p in enumerate(self.pegs)])
   def countchildren(self):
     """Count the number of children of this board
@@ -100,7 +109,7 @@ class ExpandedBoard:
     
     Returns the number as an integer."""
     count=0
-    for mov in moves_all:
+    for mov in self.jumps:
       if move_applies(board,mov):
         count += 1
     return count
