@@ -9,6 +9,7 @@ __TODO__
 - classmethod to expand a bytes string into a board
 - method, or whatever else, to collect all child boards (see discussion below)
 - something for sorting and filtering (see below)
+- the whole board inversion thing, with matchup
 
 # Overall Process
 
@@ -32,6 +33,8 @@ So the process is really like this:
     ii) put the resulting bytestring in the new list
 2) Sort the new list of bytestrings
 3) Filter the new list of bytestrings
+4) Produce the inverted list from the forward list
+5) Do a search through the forward and reverse lists, to look for a match
 
 The goal is to keep the number of uncompressed boards at any time to the bare minimum.
 

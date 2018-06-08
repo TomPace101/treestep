@@ -1,3 +1,6 @@
+"""Solving Peg Solitaire using the Brute Force approach
+
+Yes, there are more efficient ways. This is just for fun."""
 
 # Mapping between indices and 2D locations
 boardsize=(7,7)
