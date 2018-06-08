@@ -1,3 +1,15 @@
+# Current Status
+
+__TODO__
+- document the distinction between jindex, tindex, and hindex, and their mathematical relationships
+- method to undo the last transformation to a board
+- method to place a board in standard form
+- method to return human-readable string from board history
+- method to compress a board into a bytes string
+- classmethod to expand a bytes string into a board
+- method, or whatever else, to collect all child boards (see discussion below)
+- something for sorting and filtering (see below)
+
 # Overall Process
 
 1) Unrotate/mirror
@@ -7,11 +19,27 @@
 5) Filter
 and repeat
 
+So, we have a list of board bytestrings (maybe even in a file).
+The desired outcome of that is a filtered list of board bytestrings for the next move.
+
+So the process is really like this:
+1) For each board:
+  a) uncompress
+  b) unstandardize
+  c) generate children, and for each child:
+    i) standardize
+    ii) compress
+    ii) put the resulting bytestring in the new list
+2) Sort the new list of bytestrings
+3) Filter the new list of bytestrings
+
+The goal is to keep the number of uncompressed boards at any time to the bare minimum.
+
 # Requirements
 
-- IN PROGRESS: jindex table (need to output to YAML file)
-- rotation/mirror table
-- starting state bytes
+- DONE: jindex table (need to output to YAML file)
+- DONE: rotation/mirror table
+- ALMOST: starting state bytes
 
 # Rotations and Mirroring
 

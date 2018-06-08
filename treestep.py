@@ -58,6 +58,30 @@ for a,b,c in moves_forward:
 moves_all=moves_forward+moves_backward
 names_all=names_forward+names_backward
 
+# Transformation vectors
+r0n=[idx for idx,loc in enumerate(locs2d)]
+
+r1n=[]
+for idx, loc in enumerate(locs2d):
+  src=(loc[1],6-loc[0])
+  r1n.append(locs2d.index(src))
+
+r2n=[r1n[idx] for idx in r1n]
+r3n=[r2n[idx] for idx in r1n]
+
+r0f=[]
+for idx, loc in enumerate(locs2d):
+  src=(loc[0],6-loc[1])
+  r0f.append(locs2d.index(src))
+
+r1f=[r1n[idx] for idx in r0f]
+r2f=[r2n[idx] for idx in r0f]
+r3f=[r3n[idx] for idx in r0f]
+
+transtable=[r0n,r1n,r2n,r3n,r0f,r1f,r2f,r3f]
+transnames=['R0n','R1n','R2n','R3n','R0f','R1f','R2f','R3f']
+revtrans=[0,3,2,1,4,5,6,7]
+
 # Board class
 
 class ExpandedBoard:
@@ -72,12 +96,22 @@ class ExpandedBoard:
   
     - jumps = table of moves as list of tuples, each tuple a triple of peg indices: (start, middle, end)
         The list includes moves in both the forward and backward directions.
-    - numjumps = len(jumps)"""
+    - numjumps = len(jumps)
+    - transforms = table of transformations (rotations and mirroring) as a list of lists of peg indices,
+        ordered to produce the new state from the old by list comprehension
+    - numtransforms = len(transforms)
+    - boardshape = shape of the board, for display purposes, as list of lists of booleans, True for spaces, False for non-spaces"""
+
   jumps=moves_all
   numjumps=len(jumps)
+  transforms=transtable
+  numtransforms=len(transforms)
+  boardshape=boardshape
+
   def __init__(self,pegs,history):
     self.pegs=pegs
     self.history=history
+
   def move_applies(self,jindex):
     """True if the given move applies to the board
 
@@ -86,12 +120,13 @@ class ExpandedBoard:
       - jindex = integer index of entry in class attribute ``jumps``"""
     st,md,en=self.jumps[jindex]
     return self.pegs[st] and self.pegs[md] and not self.pegs[en]
+
   def apply_move(self,jindex):
     """Create the child indicated.
     
     Arguments:
     
-      - jindex = integer index of entry in class attribute ``jumps``
+      - jindex = integer index of entry in class attribute ``jumps`` specifying which jump to perform
     
     Returns:
     
@@ -100,8 +135,8 @@ class ExpandedBoard:
     This function does not check that the move is valid.
     See `move_applies` for that."""
     move=self.jumps[jindex]
-    ##TODO: this doesn't set the history for the board!
-    return ExpandedBoard([p if not i in move else not p for i,p in enumerate(self.pegs)])
+    return ExpandedBoard([p if not i in move else not p for i,p in enumerate(self.pegs)], self.history+[jindex])
+
   def countchildren(self):
     """Count the number of children of this board
     
@@ -114,4 +149,25 @@ class ExpandedBoard:
         count += 1
     return count
 
+  def apply_transform(self),tindex):
+    """Apply the requested transform to the board
+    
+    Arguments:
+    
+      - tindex = integer index of entry in class attribute ``transforms`` specifying which transform to perform"""
+    return ExpandedBoard([self[idx] for idx in self.transforms[tindex]], self.history+[tindex+self.numjumps])
+
+  def display(self):
+    """Return a string suitable for showing what a board looks like"""
+    out=""
+    nxtdx=0
+    for row in self.boardshape:
+      for space in row:
+        if not space:
+          out += " "
+        else:
+          out += "+" if board[nxtdx] else "."
+          nxtdx += 1
+      out+="\n"
+    return out
   
