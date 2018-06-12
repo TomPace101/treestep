@@ -1,29 +1,21 @@
 # Current Status
 
 __TODO__
-- document the distinction between jindex, tindex, and hindex, and their mathematical relationships
-- method to undo the last transformation to a board
-- method to place a board in standard form
-- method to return human-readable string from board history
-- method to compress a board into a bytes string
-- classmethod to expand a bytes string into a board
+- test ALL methods of the class
+- doctests
+- document the conversions between jindex, tindex, and hindex
 - method, or whatever else, to collect all child boards (see discussion below)
 - something for sorting and filtering (see below)
 - the whole board inversion thing, with matchup
+- timing and logging
+- statistics information
 
 # Overall Process
 
-1) Unrotate/mirror
-2) Generate children
-3) Rotate/mirror to get standard form
-4) Sort
-5) Filter
-and repeat
-
-So, we have a list of board bytestrings (maybe even in a file).
+We have a list of board bytestrings (maybe even in a file).
 The desired outcome of that is a filtered list of board bytestrings for the next move.
 
-So the process is really like this:
+So the process is like this:
 1) For each board:
   a) uncompress
   b) unstandardize
