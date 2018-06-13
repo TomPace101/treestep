@@ -103,8 +103,9 @@ assert len(names_everything)==84
 
 history_chars=[]
 for ci,nm in enumerate(names_everything):
-    abbr=bytes(bytearray((33+ci,)))
-    history_chars.append(abbr)
+    # abbr=bytes(bytearray((33+ci,)))
+    # history_chars.append(abbr)
+    history_chars.append(33+ci)
 
 
 # Board class
@@ -147,6 +148,18 @@ class ExpandedBoard:
     self.pegs=pegs
     self.history=history
 
+  def duplicate(self,other):
+    """Turn this board into a duplicate of the other
+    
+    Arguments:
+    
+      - other = the board to be duplicated
+      
+    No return value.
+    This board is modified."""
+    self.pegs=other.pegs
+    self.history=other.history
+
   def move_applies(self,jindex):
     """True if the given move applies to the board
 
@@ -179,8 +192,8 @@ class ExpandedBoard:
     
     Returns the number as an integer."""
     count=0
-    for mov in self.jumps:
-      if move_applies(board,mov):
+    for jindex in range(self.numjumps):
+      if self.move_applies(jindex):
         count += 1
     return count
 
@@ -199,11 +212,11 @@ class ExpandedBoard:
     No return value.
     The board is altered."""
     tindex_fwd=self.history.pop()
-    tindex_rev=reverse_transforms[tindex_fwd-self.numjumps]
+    tindex_rev=self.reverse_transforms[tindex_fwd-self.numjumps]
     self.pegs=[self.pegs[idx] for idx in self.transforms[tindex_rev]]
     return
 
-  def standardize(self):
+  def find_standard_form(self):
     """Return the board in standard form
     
     This involves doing all possible transformations to the board,
@@ -218,6 +231,17 @@ class ExpandedBoard:
         minboard=tboard
     return minboard
 
+  def standardize(self):
+    """Put the board in standard form
+
+    The result from find_standard_form replaces this board.
+    
+    No arguments.
+    No return value.
+    The board is altered."""
+    board=self.find_standard_form()
+    self.duplicate(board)
+
   def compress(self):
     """Return the bytes string representing the board"""
     #Peg data
@@ -231,7 +255,7 @@ class ExpandedBoard:
         nxtchar=0
     #History data
     for h in self.history:
-      outarr.append(history_bytes[h])
+      outarr.append(self.history_bytes[h])
     #Done
     return bytes(outarr)
 
@@ -243,7 +267,7 @@ class ExpandedBoard:
     for c in bstr[:5]:
       dividend=c-128
       divisor=64
-      while divisor >= 1 and len(board)<33:
+      while divisor >= 1 and len(pegs)<33:
         quotient=dividend//divisor
         pegs.append(quotient>0)
         dividend-=divisor*quotient
@@ -251,7 +275,7 @@ class ExpandedBoard:
     #History data
     history=[]
     for c in bstr[5:]:
-      history.append(ord(c)-33)
+      history.append(c-33)
     #Class instance
     return cls(pegs,history)
 
