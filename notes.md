@@ -1,7 +1,6 @@
 # Current Status
 
 __TODO__
-- test ALL methods of the class
 - doctests
 - document the conversions between jindex, tindex, and hindex
 - method, or whatever else, to collect all child boards (see discussion below)
@@ -29,12 +28,6 @@ So the process is like this:
 5) Do a search through the forward and reverse lists, to look for a match
 
 The goal is to keep the number of uncompressed boards at any time to the bare minimum.
-
-# Requirements
-
-- DONE: jindex table (need to output to YAML file)
-- DONE: rotation/mirror table
-- ALMOST: starting state bytes
 
 # Rotations and Mirroring
 
