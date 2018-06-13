@@ -303,3 +303,7 @@ class ExpandedBoard:
     out+="\n"
     out+=self.peg_display_string()
     return out
+
+# The starting board
+startpegs=[True]*16+[False]+[True]*16
+startboard=ExpandedBoard(startpegs,[])
