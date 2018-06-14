@@ -197,6 +197,15 @@ class ExpandedBoard:
         count += 1
     return count
 
+  def iter_children(self):
+    """Generator teturn all the children of this board, as ExpandedBoard instances
+    
+    No arguments.
+    Yields one child each pass."""
+    for jindex in range(self.numjumps):
+      if self.move_applies(jindex):
+        yield self.apply_move(jindex)
+
   def apply_transform(self,tindex):
     """Apply the requested transform to the board
     
