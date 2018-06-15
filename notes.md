@@ -19,15 +19,22 @@ So the process is like this:
   a) uncompress
   b) unstandardize
   c) generate children, and for each child:
-    i) standardize
-    ii) compress
-    ii) put the resulting bytestring in the new list
+    i) collect/update statistics
+    ii) standardize
+    iii) compress
+    iv) put the resulting bytestring in the new list
 2) Sort the new list of bytestrings
 3) Filter the new list of bytestrings
 4) Produce the inverted list from the forward list
 5) Do a search through the forward and reverse lists, to look for a match
 
 The goal is to keep the number of uncompressed boards at any time to the bare minimum.
+Towards that end, maybe we want to create an Iterator:
+https://docs.python.org/3/tutorial/classes.html#iterators
+
+The real question is this:
+try to process in-memory, or use files.
+
 
 # Rotations and Mirroring
 
@@ -57,4 +64,11 @@ You just have to know which transformation undoes each other one.
 I worked it out on a piece of paper.
 Most of them undo themselves.
 The only exception is R1n and R3n, which undo each other.
+
+# Combine sorting and filtering?
+For that matter, the process could also be combined with board generation.
+This would reduce the number of boards that must be stored,
+but at the cost of doing more comparisons for filtering.
+So it's a time-memory tradeoff.
+For now, we won't make this trade.
 
