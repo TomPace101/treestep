@@ -5,9 +5,9 @@ __TODO__
 - document the conversions between jindex, tindex, and hindex
 - method, or whatever else, to collect all child boards (see discussion below)
 - something for sorting and filtering (see below)
-- the whole board inversion thing, with matchup
 - timing and logging
 - statistics information
+- the whole board inversion thing, with matchup
 
 # Overall Process
 
@@ -34,7 +34,12 @@ https://docs.python.org/3/tutorial/classes.html#iterators
 
 The real question is this:
 try to process in-memory, or use files.
+Perhaps we can create an interface for both.
 
+BoardIterator:
+Can yield boards, but also we need a way to add boards to it.
+In preparation for using files, we should keep the interface restricted to
+"read" or "write" mode.
 
 # Rotations and Mirroring
 
