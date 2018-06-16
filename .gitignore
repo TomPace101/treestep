@@ -4,3 +4,8 @@ __pycache__
 
 #notebooks
 notebooks
+
+#data files
+data
+tmp
+*.boards

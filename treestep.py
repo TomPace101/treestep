@@ -11,7 +11,7 @@ Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
 # Constants
 BUFFER_SIZE=1024**3//2 #half a gigabyte (gibibyte?) (half the RAM of a raspberry pi 3)
-RADIX_TMPL="tmp/byte_%d_%02d.boards"
+RADIX_TMPL="tmp/byte_%d_%03d.boards"
 
 
 # Mapping between indices and 2D locations
@@ -289,7 +289,8 @@ class ExpandedBoard:
     #History data
     history=[]
     for c in bstr[5:]:
-      history.append(c-33)
+      if c>32: #Ignore newlines, etc.
+        history.append(c-33)
     #Class instance
     return cls(pegs,history)
 
@@ -327,7 +328,45 @@ startbytes=startbytesboard.compress()
 
 # Processing functions
 
-def foward(infpath,outfpath):
+class PassFiles(dict):
+  """A dictionary of opened input/output files for the radix sort
+  
+  The dictionary is of the form {byte value as integer: file handle}"""
+  @classmethod
+  def open_all(cls,position,mode):
+    """Open the 128 files for the radix sort
+    
+    Arguments:
+    
+      - position = the radix position as integer, for use in the filenames
+      - mode = 'rb' or 'wb', mode to open the files in"""
+    passdict=cls()
+    self.position=position
+    passdict.filenames=[]
+    for k in range(128,256):
+      partfname=RADIX_TMPL%(position,k)
+      passdict.filenames.append(partfname)
+      passdict[k]=open(partfname,mode,BUFFER_SIZE)
+    return passdict
+
+  def close_all(self):
+    """Close the opened pass files
+    
+    No arguments.
+    No return value.
+    The files are closed."""
+    for fh in self.values():
+      fh.close()
+    return
+  
+  def delete_all(self):
+    """Remove all the files for this pass.
+    
+    No arguments.
+    No return value."""
+    ##TODO: do it this way, or delete each file after it has been used for input?
+
+def forward(infpath,outfpath):
   """Generate boards for the next move, and sort, and filter
   
   Arguments:
@@ -336,18 +375,40 @@ def foward(infpath,outfpath):
     - outfpath = path to output boards file
   
   No return value."""
-  ##TODO: to minimize the amount of duplicate data, do all 3 operations together:
-  ##the generated boards should be written to the appropriate first pass file.
-  ##Then do the remaining sorting passes
-  ##Then, combine the filtering step with reconstitution into a single output file
-  with open(infpath,'rb',BUFFER_SIZE) as infp, open(outfpath,'wb',BUFFER_SIZE) as outfp:
-    #For each input board
-    for bstr in infp:
-      board = ExpandedBoard.uncompress(bstr)
-      board.unstandardize()
-      for child in board.iter_children():
-        child.standardize()
-        outfp.write(child.compress()+'\n')
+  #Generating pass
+  position=4
+  infp=open(infpath,'rb',BUFFER_SIZE)
+  passdict_out=PassFiles.open_all(position,'wb')
+  for bstr in infp: #for each input board
+    board = ExpandedBoard.uncompress(bstr)
+    board.unstandardize()
+    #for each child board
+    for child in board.iter_children():
+      #standardize, compress, and put in proper bin
+      child.standardize()
+      outstr=child.compress()+b'\n'
+      passdict_out[outstr[position]].write(outstr)
+  infp.close()
+  passdict_in.close_all()
+  #Remaining passes
+  while position>0:
+    passdict_in=PassFiles.open_all(position,'rb')
+    position-=1
+    passdict_out=PassFiles.open_all(position,'wb')
+    for k in range(128,256):
+      for bstr in passdict_in[k]:
+        passdict_out[bstr[position]].write(bstr)
+    passdict_in.close_all()
+    passdict_out.close_all()
+  #Filtering pass
+  passdict_in=PassFiles.open_all(position,'rb')
+  outfp=open(outfpath,'wb',BUFFER_SIZE)
+  lastdat=''
+  for k in range(128,256):
+    for bstr in passdict_in[k]:
+      if bstr[:5]!=lastdat:
+        outfp.write(bstr)
+        lastdat=bstr[:5]
+  passdict_in.close_all()
+  outfp.close()
   return
-
-  
