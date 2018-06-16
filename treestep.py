@@ -9,6 +9,11 @@ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
+# Constants
+BUFFER_SIZE=1024**3//2 #half a gigabyte (gibibyte?) (half the RAM of a raspberry pi 3)
+RADIX_TMPL="tmp/byte_%d_%02d.boards"
+
+
 # Mapping between indices and 2D locations
 boardsize=(7,7)
 endrows=[False]*2+[True]*3+[False]*2
@@ -313,6 +318,36 @@ class ExpandedBoard:
     out+=self.peg_display_string()
     return out
 
-# The starting board
+# The starting board, and its bytes string
 startpegs=[True]*16+[False]+[True]*16
 startboard=ExpandedBoard(startpegs,[])
+startbytesboard=ExpandedBoard(startpegs,[])
+startbytesboard.standardize()
+startbytes=startbytesboard.compress()
+
+# Processing functions
+
+def foward(infpath,outfpath):
+  """Generate boards for the next move, and sort, and filter
+  
+  Arguments:
+  
+    - infpath = path to input boards file
+    - outfpath = path to output boards file
+  
+  No return value."""
+  ##TODO: to minimize the amount of duplicate data, do all 3 operations together:
+  ##the generated boards should be written to the appropriate first pass file.
+  ##Then do the remaining sorting passes
+  ##Then, combine the filtering step with reconstitution into a single output file
+  with open(infpath,'rb',BUFFER_SIZE) as infp, open(outfpath,'wb',BUFFER_SIZE) as outfp:
+    #For each input board
+    for bstr in infp:
+      board = ExpandedBoard.uncompress(bstr)
+      board.unstandardize()
+      for child in board.iter_children():
+        child.standardize()
+        outfp.write(child.compress()+'\n')
+  return
+
+  

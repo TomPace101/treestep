@@ -40,6 +40,8 @@ BoardIterator:
 Can yield boards, but also we need a way to add boards to it.
 In preparation for using files, we should keep the interface restricted to
 "read" or "write" mode.
+Not really sure what the benefit of this class is over just some functions.
+
 
 # Rotations and Mirroring
 
