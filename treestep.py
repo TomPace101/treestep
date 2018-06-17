@@ -9,6 +9,8 @@ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
+import os
+
 # Constants
 BUFFER_SIZE=1024**3//2 #half a gigabyte (gibibyte?) (half the RAM of a raspberry pi 3)
 RADIX_TMPL="tmp/byte_%d_%03d.boards"
@@ -340,14 +342,12 @@ class PassFiles(dict):
     
       - position = the radix position as integer, for use in the filenames
       - mode = 'rb' or 'wb', mode to open the files in"""
-    passdict=cls()
+    self=cls()
     self.position=position
-    passdict.filenames=[]
     for k in range(128,256):
       partfname=RADIX_TMPL%(position,k)
-      passdict.filenames.append(partfname)
-      passdict[k]=open(partfname,mode,BUFFER_SIZE)
-    return passdict
+      self[k]=open(partfname,mode,BUFFER_SIZE)
+    return self
 
   def close_all(self):
     """Close the opened pass files
@@ -359,12 +359,17 @@ class PassFiles(dict):
       fh.close()
     return
   
-  def delete_all(self):
-    """Remove all the files for this pass.
+  def delete_file(self,k):
+    """Close and remove the file the requested byte on this pass.
     
-    No arguments.
+    Arguments:
+    
+      - k = integer 128-256 identifying the file to be removed
+      
     No return value."""
-    ##TODO: do it this way, or delete each file after it has been used for input?
+    self[k].close()
+    os.remove(RADIX_TMPL%(self.position,k))
+    return
 
 def forward(infpath,outfpath):
   """Generate boards for the next move, and sort, and filter
@@ -389,7 +394,7 @@ def forward(infpath,outfpath):
       outstr=child.compress()+b'\n'
       passdict_out[outstr[position]].write(outstr)
   infp.close()
-  passdict_in.close_all()
+  passdict_out.close_all()
   #Remaining passes
   while position>0:
     passdict_in=PassFiles.open_all(position,'rb')
@@ -398,7 +403,7 @@ def forward(infpath,outfpath):
     for k in range(128,256):
       for bstr in passdict_in[k]:
         passdict_out[bstr[position]].write(bstr)
-    passdict_in.close_all()
+      passdict_in.delete_file(k)
     passdict_out.close_all()
   #Filtering pass
   passdict_in=PassFiles.open_all(position,'rb')
@@ -409,6 +414,6 @@ def forward(infpath,outfpath):
       if bstr[:5]!=lastdat:
         outfp.write(bstr)
         lastdat=bstr[:5]
-  passdict_in.close_all()
+    passdict_in.delete_file(k)
   outfp.close()
   return
