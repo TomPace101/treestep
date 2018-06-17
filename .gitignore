@@ -6,6 +6,5 @@ __pycache__
 notebooks
 
 #data files
-data
-tmp
 *.boards
+*.yaml
