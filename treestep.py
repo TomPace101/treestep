@@ -1,6 +1,17 @@
-"""Solving Peg Solitaire using the Brute Force approach
+"""Solving Peg Solitaire using a Brute Force approach
 
-Yes, there are more efficient ways. This is just for fun.
+There are probably more efficient ways. This is just for fun.
+
+"Brute Force" in this case means the following:
+
+  - The types of moves considered are single jumps, not "packages" of jumps.
+  - There is no heuristic used to prune the search tree: all possible moves are considered.
+
+The approach is to generate all possible valid board configurations ("boards", for short)
+throughout all the steps of the puzzle.
+Rotations and reflections of a given board are considered equivalent.
+For each possible board, there may be more than one set of valid moves that
+results in that board, but only one such "history" is retained for each board.
 
 This work is licensed under the
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
@@ -9,12 +20,19 @@ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
+#Standard Library
 import os
+import datetime
 
 # Constants
 BUFFER_SIZE=1024**3//2 #half a gigabyte (gibibyte?) (half the RAM of a raspberry pi 3)
 RADIX_TMPL="tmp/byte_%d_%03d.boards"
+MOVE_TMPL="data/move_%02d.boards"
+STATS_TMPL="stats/move_%02d.yaml"
+TIMESTAMP_FMT="%a %d-%b-%Y %I:%M:%S.%f %p"
 
+# Classes for stats recording and logging
+##TODO
 
 # Mapping between indices and 2D locations
 boardsize=(7,7)
@@ -371,15 +389,32 @@ class PassFiles(dict):
     os.remove(RADIX_TMPL%(self.position,k))
     return
 
-def forward(infpath,outfpath):
+def bootstrap():
+  """Create the move 0 input file
+  
+  No arguments.
+  No return value."""
+  outfpath=MOVE_TMPL%0
+  with open(outfpath,'wb') as fp:
+    fp.write(startbytes+'\n')
+  return
+
+def forward(startmove):
   """Generate boards for the next move, and sort, and filter
+  
+  Note that this can't create the file for move 0.
+  See `bootstrap()` for that.
   
   Arguments:
   
+    - startmove = integer for move number to start from (0 for the beginning)
     - infpath = path to input boards file
     - outfpath = path to output boards file
   
   No return value."""
+  #Input and output file paths
+  infpath=MOVE_TMPL%startmove
+  outfpath=MOVE_TMPL%(startmove+1)
   #Generating pass
   position=4
   infp=open(infpath,'rb',BUFFER_SIZE)

@@ -1,13 +1,14 @@
+This document contains the programmer's notes such as TODO items.
+
 # Current Status
 
 __TODO__
 - doctests
 - document the conversions between jindex, tindex, and hindex
-- method, or whatever else, to collect all child boards (see discussion below)
-- something for sorting and filtering (see below)
+- list the overall process in the module docstring
 - timing and logging
 - statistics information
-- the whole board inversion thing, with matchup
+- optional: the whole board inversion thing, with matchup
 
 # Overall Process
 
@@ -42,6 +43,7 @@ In preparation for using files, we should keep the interface restricted to
 "read" or "write" mode.
 Not really sure what the benefit of this class is over just some functions.
 
+So I just decided to go straight to using files.
 
 # Rotations and Mirroring
 
