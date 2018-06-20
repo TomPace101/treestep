@@ -31,6 +31,13 @@ RADIX_TMPL="tmp/byte_%d_%03d.boards"
 MOVE_TMPL="data/move_%02d.boards"
 STATS_TMPL="stats/move_%02d.yaml"
 TIMESTAMP_FMT="%a %d-%b-%Y %I:%M:%S.%f %p"
+STATS_DATA_TMPL="""#Results for step forward from move {0} to move {1}
+inboards: {2}
+inboards_childcounts:
+{3}
+outboards_unfil: {4}
+outboards_fil: {5}
+"""
 
 # Classes for stats recording and logging
 class Logger:
@@ -434,6 +441,11 @@ def forward(startmove):
   
   No return value."""
   logger.log("Starting step forward.")
+  #Initialize stats vars
+  inboards=0
+  outboards_unfil=0
+  outboards_fil=0
+  inboards_childcounts={}
   #Input and output file paths
   infpath=MOVE_TMPL%startmove
   outfpath=MOVE_TMPL%(startmove+1)
@@ -443,14 +455,22 @@ def forward(startmove):
   infp=open(infpath,'rb',BUFFER_SIZE)
   passdict_out=PassFiles.open_all(position,'wb')
   for bstr in infp: #for each input board
+    inboards += 1
     board = ExpandedBoard.uncompress(bstr)
     board.unstandardize()
     #for each child board
+    num_children=0
     for child in board.iter_children():
+      num_children+=1
+      outboards_unfil += 1
       #standardize, compress, and put in proper bin
       child.standardize()
       outstr=child.compress()+b'\n'
       passdict_out[outstr[position]].write(outstr)
+    if not num_children in inboards_childcounts.keys():
+      inboards_childcounts[num_children]=1
+    else:
+      inboards_childcounts[num_children]+=1
   infp.close()
   passdict_out.close_all()
   #Remaining passes
@@ -472,10 +492,18 @@ def forward(startmove):
   for k in range(128,256):
     for bstr in passdict_in[k]:
       if bstr[:5]!=lastdat:
+        outboards_fil+=1
         outfp.write(bstr)
         lastdat=bstr[:5]
     passdict_in.delete_file(k)
   outfp.close()
+  #Write stats
+  logger.log("Writing stats.")
+  childcounts_str="\n".join(["  %d: %d"%(k,v) for k,v in inboards_childcounts.items()])
+  statstup=(startmove,startmove+1,inboards,childcounts_str,outboards_unfil,outboards_fil)
+  with open(STATS_TMPL%startmove,'w') as statfp:
+    statdata=STATS_DATA_TMPL.format(*statstup)
+    statfp.write(statdata)
   logger.log("Step forward complete.")
   return
 
