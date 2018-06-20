@@ -3,6 +3,11 @@ This document contains the programmer's notes such as TODO items.
 # Current Status
 
 __TODO__
+- sort the keys in the stats output for the dictionary
+- implement the logging tee in the program itself (you can make it optional)
+- any way to add total runtime to stats?
+- then rerun
+
 - doctests
 - document the conversions between jindex, tindex, and hindex
 - list the overall process in the module docstring
