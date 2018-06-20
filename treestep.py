@@ -21,6 +21,7 @@ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
 #Standard Library
+import argparse
 import os
 import datetime
 
@@ -32,8 +33,24 @@ STATS_TMPL="stats/move_%02d.yaml"
 TIMESTAMP_FMT="%a %d-%b-%Y %I:%M:%S.%f %p"
 
 # Classes for stats recording and logging
+class Logger:
+  def __init__(self):
+    self.start=datetime.datetime.now()
+    self.last=self.start
+  def log(self,msg):
+    msgtime=datetime.datetime.now()
+    tstmp=msgtime.strftime(TIMESTAMP_FMT)
+    lastdelta=msgtime-self.last
+    rundelta=msgtime-self.start
+    outstr="+%f %s [%s] %s"%(lastdelta.total_seconds(),tstmp,str(rundelta),msg)
+    print(outstr)
+    self.last=msgtime
+
+logger=Logger()
+
 ##TODO
 
+logger.log("Loading module.")
 # Mapping between indices and 2D locations
 boardsize=(7,7)
 endrows=[False]*2+[True]*3+[False]*2
@@ -360,11 +377,13 @@ class PassFiles(dict):
     
       - position = the radix position as integer, for use in the filenames
       - mode = 'rb' or 'wb', mode to open the files in"""
+    logger.log("Opening passfiles for position %d mode %s."%(position,mode))
     self=cls()
     self.position=position
     for k in range(128,256):
       partfname=RADIX_TMPL%(position,k)
       self[k]=open(partfname,mode,BUFFER_SIZE)
+    logger.log("Passfiles open.")
     return self
 
   def close_all(self):
@@ -373,6 +392,7 @@ class PassFiles(dict):
     No arguments.
     No return value.
     The files are closed."""
+    logger.log("Closing passfiles for position %d."%self.position)
     for fh in self.values():
       fh.close()
     return
@@ -394,9 +414,10 @@ def bootstrap():
   
   No arguments.
   No return value."""
+  logger.log("Bootstrapping.")
   outfpath=MOVE_TMPL%0
   with open(outfpath,'wb') as fp:
-    fp.write(startbytes+'\n')
+    fp.write(startbytes+b'\n')
   return
 
 def forward(startmove):
@@ -412,11 +433,13 @@ def forward(startmove):
     - outfpath = path to output boards file
   
   No return value."""
+  logger.log("Starting step forward.")
   #Input and output file paths
   infpath=MOVE_TMPL%startmove
   outfpath=MOVE_TMPL%(startmove+1)
   #Generating pass
   position=4
+  logger.log("Generating pass (position %d)"%position)
   infp=open(infpath,'rb',BUFFER_SIZE)
   passdict_out=PassFiles.open_all(position,'wb')
   for bstr in infp: #for each input board
@@ -432,6 +455,7 @@ def forward(startmove):
   passdict_out.close_all()
   #Remaining passes
   while position>0:
+    logger.log("Starting pass for position %d."%position)
     passdict_in=PassFiles.open_all(position,'rb')
     position-=1
     passdict_out=PassFiles.open_all(position,'wb')
@@ -441,6 +465,7 @@ def forward(startmove):
       passdict_in.delete_file(k)
     passdict_out.close_all()
   #Filtering pass
+  logger.log("Starting filtering pass.")
   passdict_in=PassFiles.open_all(position,'rb')
   outfp=open(outfpath,'wb',BUFFER_SIZE)
   lastdat=''
@@ -451,4 +476,15 @@ def forward(startmove):
         lastdat=bstr[:5]
     passdict_in.delete_file(k)
   outfp.close()
+  logger.log("Step forward complete.")
   return
+
+# Support for command-line usage
+if __name__=='__main__':
+  parser = argparse.ArgumentParser(description='Advance the puzzle forward one step.')
+  parser.add_argument("startmove",type=int,help="Move number to start from, used for calculating input filename. Use -1 to bootstrap.")
+  args = parser.parse_args()
+  if args.startmove==-1:
+    bootstrap()
+  else:
+    forward(args.startmove)
