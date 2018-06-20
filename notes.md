@@ -6,8 +6,6 @@ __TODO__
 - doctests
 - document the conversions between jindex, tindex, and hindex
 - list the overall process in the module docstring
-- timing and logging
-- statistics information
 - optional: the whole board inversion thing, with matchup
 
 # Overall Process
