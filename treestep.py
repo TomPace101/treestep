@@ -26,10 +26,12 @@ import os
 import datetime
 
 # Constants
-BUFFER_SIZE=1024**3//2 #half a gigabyte (gibibyte?) (half the RAM of a raspberry pi 3)
+BUFFER_SIZE=1024**3//2//256 #consume half a gigabyte (gibibyte?) with 256 files (half the RAM of a raspberry pi 3)
 RADIX_TMPL="tmp/byte_%d_%03d.boards"
 MOVE_TMPL="data/move_%02d.boards"
 STATS_TMPL="stats/move_%02d.yaml"
+LOG_TMPL="logs/from_%02d.txt"
+BOOTSTRAP_LOG="logs/bootstrap.txt"
 TIMESTAMP_FMT="%a %d-%b-%Y %I:%M:%S.%f %p"
 STATS_DATA_TMPL="""#Results for step forward from move {0} to move {1}
 inboards: {2}
@@ -37,13 +39,23 @@ inboards_childcounts:
 {3}
 outboards_unfil: {4}
 outboards_fil: {5}
+runtime: {6}
 """
 
 # Classes for stats recording and logging
 class Logger:
-  def __init__(self):
+  def __init__(self,outfpath=None):
     self.start=datetime.datetime.now()
     self.last=self.start
+    if outfpath is None:
+      self.fp = None
+    else:
+      self.open(outfpath)
+  def open(self,outfpath):
+    self.fp=open(outfpath,'w')
+  def close(self):
+    if self.fp is not None:
+      self.fp.close()
   def log(self,msg):
     msgtime=datetime.datetime.now()
     tstmp=msgtime.strftime(TIMESTAMP_FMT)
@@ -51,11 +63,11 @@ class Logger:
     rundelta=msgtime-self.start
     outstr="+%f %s [%s] %s"%(lastdelta.total_seconds(),tstmp,str(rundelta),msg)
     print(outstr)
+    if self.fp is not None:
+      self.fp.write(outstr+'\n')
     self.last=msgtime
 
 logger=Logger()
-
-##TODO
 
 logger.log("Loading module.")
 # Mapping between indices and 2D locations
@@ -452,6 +464,7 @@ def forward(startmove):
   #Generating pass
   position=4
   logger.log("Generating pass (position %d)"%position)
+  run_start=datetime.datetime.now()
   infp=open(infpath,'rb',BUFFER_SIZE)
   passdict_out=PassFiles.open_all(position,'wb')
   for bstr in infp: #for each input board
@@ -497,10 +510,14 @@ def forward(startmove):
         lastdat=bstr[:5]
     passdict_in.delete_file(k)
   outfp.close()
+  run_end=datetime.datetime.now()
+  runtime=(run_end-run_start).total_seconds()
   #Write stats
   logger.log("Writing stats.")
-  childcounts_str="\n".join(["  %d: %d"%(k,v) for k,v in inboards_childcounts.items()])
-  statstup=(startmove,startmove+1,inboards,childcounts_str,outboards_unfil,outboards_fil)
+  keylist=list(inboards_childcounts.keys())
+  keylist.sort()
+  childcounts_str="\n".join(["  %d: %d"%(k,inboards_childcounts[k]) for k in keylist])
+  statstup=(startmove,startmove+1,inboards,childcounts_str,outboards_unfil,outboards_fil,runtime)
   with open(STATS_TMPL%startmove,'w') as statfp:
     statdata=STATS_DATA_TMPL.format(*statstup)
     statfp.write(statdata)
@@ -513,6 +530,10 @@ if __name__=='__main__':
   parser.add_argument("startmove",type=int,help="Move number to start from, used for calculating input filename. Use -1 to bootstrap.")
   args = parser.parse_args()
   if args.startmove==-1:
+    logger.open(BOOTSTRAP_LOG)
     bootstrap()
+    logger.close()
   else:
+    logger.open(LOG_TMPL%startmove)
     forward(args.startmove)
+    logger.close()
