@@ -533,6 +533,6 @@ if __name__=='__main__':
     bootstrap()
     logger.close()
   else:
-    logger.open(LOG_TMPL%startmove)
+    logger.open(LOG_TMPL%args.startmove)
     forward(args.startmove)
     logger.close()
