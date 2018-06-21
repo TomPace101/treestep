@@ -69,7 +69,6 @@ class Logger:
 
 logger=Logger()
 
-logger.log("Loading module.")
 # Mapping between indices and 2D locations
 boardsize=(7,7)
 endrows=[False]*2+[True]*3+[False]*2
