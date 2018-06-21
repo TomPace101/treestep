@@ -22,8 +22,8 @@ Copyright (C) 2018 Tom Pace - All Rights Reserved"""
 
 #Standard Library
 import argparse
-import os
 import datetime
+import os
 
 # Constants
 BUFFER_SIZE=1024**3//2//256 #consume half a gigabyte (gibibyte?) with 256 files (half the RAM of a raspberry pi 3)
@@ -41,6 +41,7 @@ outboards_unfil: {4}
 outboards_fil: {5}
 runtime: {6}
 """
+# Line buffer stdout
 
 # Classes for stats recording and logging
 class Logger:
@@ -52,7 +53,7 @@ class Logger:
     else:
       self.open(outfpath)
   def open(self,outfpath):
-    self.fp=open(outfpath,'w')
+    self.fp=open(outfpath,'w',1)
   def close(self):
     if self.fp is not None:
       self.fp.close()
@@ -62,7 +63,7 @@ class Logger:
     lastdelta=msgtime-self.last
     rundelta=msgtime-self.start
     outstr="+%f %s [%s] %s"%(lastdelta.total_seconds(),tstmp,str(rundelta),msg)
-    print(outstr)
+    print(outstr,flush=True)
     if self.fp is not None:
       self.fp.write(outstr+'\n')
     self.last=msgtime
