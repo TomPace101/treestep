@@ -488,7 +488,7 @@ def forward(startmove):
   passdict_out.close_all()
   #Remaining passes
   while position>0:
-    logger.log("Starting pass for position %d."%position-1)
+    logger.log("Starting pass for position %d."%(position-1))
     passdict_in=PassFiles.open_all(position,'rb')
     position-=1
     passdict_out=PassFiles.open_all(position,'wb')
