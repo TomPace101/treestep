@@ -7,6 +7,25 @@ This document contains the programmer's notes such as TODO items.
 - list the overall process in the module docstring
 - optional: the whole board inversion thing, with matchup
 
+# Inversion and matchup
+
+The basic idea is that there is a symmetry between
+starting at the first move and going forward,
+and starting at the last move and going backward.
+Forward, you start with one hole and 32 pegs,
+and each move adds a hole and takes away a peg.
+Backward, you start with one peg and 32 holes,
+and each move adds a peg and takes away a hole.
+They are the same moves other than that "inversion".
+So if you can get to move 16, then invert all those boards,
+you could generate a set of boards for move 17 that are only reachable from the goal state.
+Versus if you continue going forward, a lot of the boards you have can't get to the goal state.
+So you'd still need to step forward to move 17,
+then find a match between one (or more) of the boards and an inverted board from move 16.
+Of course, inverting the pegs and holes is easy.
+The tricky part is inverting the move history.
+You need to develop a table of how to do that.
+
 # Overall Process
 
 We have a list of board bytestrings (maybe even in a file).
