@@ -54,6 +54,9 @@ class Logger:
       self.open(outfpath)
   def open(self,outfpath):
     self.fp=open(outfpath,'w',1)
+  def open_for(self,startmove):
+    outfpath = BOOTSTRAP_LOG if startmove == -1 else LOG_TMPL%startmove
+    self.open(outfpath)
   def close(self):
     if self.fp is not None:
       self.fp.close()
@@ -529,11 +532,9 @@ if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Advance the puzzle forward one step.')
   parser.add_argument("startmove",type=int,help="Move number to start from, used for calculating input filename. Use -1 to bootstrap.")
   args = parser.parse_args()
+  logger.open_for(args.startmove)
   if args.startmove==-1:
-    logger.open(BOOTSTRAP_LOG)
     bootstrap()
-    logger.close()
   else:
-    logger.open(LOG_TMPL%args.startmove)
     forward(args.startmove)
-    logger.close()
+  logger.close()
