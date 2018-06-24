@@ -385,7 +385,23 @@ startbytesboard=ExpandedBoard(startpegs,[])
 startbytesboard.standardize()
 startbytes=startbytesboard.compress()
 
-# Processing functions
+# Container objects
+
+def read_movefile(fpath,unstandard=True):
+  """Convenience function (generator) for iterating over and expanding boards in a move file
+  
+  Arguments:
+  
+    - fpath = path to input board file
+    - unstandard = optional boolean, True (default) to unstandardize the boards
+  
+  Returns: iterator over the expanded boards as requested"""
+  with open(fpath,'rb',BUFFER_SIZE) as fp:
+    for bstr in fp:
+      board = ExpandedBoard.uncompress(bstr)
+      if unstandard:
+        board.unstandardize
+      yield board
 
 class PassFiles(dict):
   """A dictionary of opened input/output files for the radix sort
@@ -430,6 +446,8 @@ class PassFiles(dict):
     self[k].close()
     os.remove(RADIX_TMPL%(self.position,k))
     return
+
+# Processing functions
 
 def bootstrap():
   """Create the move 0 input file

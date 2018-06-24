@@ -2,6 +2,7 @@ This document contains the programmer's notes such as TODO items.
 
 # Current Status
 
+- better interfaces: high-level API, more command line options
 - doctests
 - document the conversions between jindex, tindex, and hindex
 - list the overall process in the module docstring
