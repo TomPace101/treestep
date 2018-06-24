@@ -18,7 +18,7 @@ Boards are stored in files in a binary format designed to balance
 information density and convenience.
 
 Each step from all possible boards in one move to all possible boards
-in the next move follows the following process:
+in the next move follows this process:
 
 1) For each board:
   a) uncompress
@@ -29,7 +29,7 @@ in the next move follows the following process:
     iii) compress
     iv) put the resulting bytestring in the new list
 2) Sort the new list of bytestrings, using a radix sort
-3) Filter the new list of bytestrings to remove duplicate boards with different histories
+3) Filter the sorted list of bytestrings to remove duplicate boards with different histories
 
 Radix sort is used because the sort key length is much smaller than log(N)
 for the cases where it matters.
