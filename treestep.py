@@ -4,14 +4,35 @@ There are probably more efficient ways. This is just for fun.
 
 "Brute Force" in this case means the following:
 
-  - The types of moves considered are single jumps, not "packages" of jumps.
+  - The types of moves considered are single jumps, not multiples or "packages" of jumps.
   - There is no heuristic used to prune the search tree: all possible moves are considered.
+  - A breadth-first search is conducted all the way from start to goal
 
 The approach is to generate all possible valid board configurations ("boards", for short)
 throughout all the steps of the puzzle.
 Rotations and reflections of a given board are considered equivalent.
 For each possible board, there may be more than one set of valid moves that
 results in that board, but only one such "history" is retained for each board.
+
+Boards are stored in files in a binary format designed to balance
+information density and convenience.
+
+Each step from all possible boards in one move to all possible boards
+in the next move follows the following process:
+
+1) For each board:
+  a) uncompress
+  b) unstandardize
+  c) generate children, and for each child:
+    i) collect/update statistics
+    ii) standardize
+    iii) compress
+    iv) put the resulting bytestring in the new list
+2) Sort the new list of bytestrings, using a radix sort
+3) Filter the new list of bytestrings to remove duplicate boards with different histories
+
+Radix sort is used because the sort key length is much smaller than log(N)
+for the cases where it matters.
 
 This work is licensed under the
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
